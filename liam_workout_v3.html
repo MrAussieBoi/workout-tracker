@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#080810">
+<title>Liam's Workout</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810;
+  --surface: #0f0f1a;
+  --card: #111120;
+  --card2: #161628;
+  --border: #1c1c35;
+  --border2: #252545;
+  --c1: #5eead4;
+  --c2: #f87171;
+  --c3: #fbbf24;
+  --text: #e2e2f0;
+  --muted: #4a4a70;
+  --muted2: #333355;
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,0.1);
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { font-size:16px; }
+
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Barlow',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  overflow-x:hidden;
+  padding-bottom:calc(80px + var(--safe-bottom));
+}
+
+/* subtle grid */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(94,234,212,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(94,234,212,0.025) 1px, transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none; z-index:0;
+}
+
+/* ── HEADER ── */
+.top-bar {
+  position:sticky; top:0; z-index:50;
+  background:rgba(8,8,16,0.92);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:16px 16px 0;
+}
+
+.top-bar-row1 {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+
+.app-name {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:0.02em;
+  background:linear-gradient(120deg,#fff 40%,var(--c1));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.week-info {
+  text-align:right;
+}
+.week-label {
+  font-size:10px;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--muted);
+  display:block;
+}
+.week-date {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;
+  font-weight:600;
+  color:var(--text);
+}
+
+/* Week dots */
+.week-dots-row {
+  display:flex;
+  gap:6px;
+  padding-bottom:14px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.week-dots-row::-webkit-scrollbar { display:none; }
+
+.week-dot {
+  flex:1;
+  min-width:40px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  cursor:pointer;
+  -webkit-user-select:none;
+  user-select:none;
+}
+.wd-day {
+  font-size:9px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.wd-circle {
+  width:32px; height:32px;
+  border-radius:10px;
+  border:1px solid var(--border2);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  color:var(--muted);
+  transition:all 0.2s;
+  position:relative;
+}
+.wd-circle.today {
+  border-color:var(--border2);
+  box-shadow:0 0 0 2px var(--bg), 0 0 0 3px var(--border2);
+}
+.wd-circle.trained-1 { background:rgba(94,234,212,0.15); border-color:var(--c1); color:var(--c1); }
+.wd-circle.trained-2 { background:rgba(248,113,113,0.15); border-color:var(--c2); color:var(--c2); }
+.wd-circle.trained-3 { background:rgba(251,191,36,0.15); border-color:var(--c3); color:var(--c3); }
+.wd-circle.rest-day  { background:rgba(74,222,128,0.08); border-color:var(--green); color:var(--green); }
+.wd-circle.done-check::after {
+  content:'✓';
+  font-size:14px;
+}
+.wd-label {
+  font-size:8px;
+  color:var(--muted);
+  text-align:center;
+  letter-spacing:0.05em;
+  height:10px;
+}
+
+/* ── DAY TABS ── */
+.day-tabs {
+  display:flex;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  z-index:40;
+}
+.day-tab {
+  flex:1;
+  padding:13px 4px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  background:none;
+  border:none;
+  border-bottom:2px solid transparent;
+  cursor:pointer;
+  transition:all 0.18s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  margin-bottom:-1px;
+}
+.day-tab .mini-prog {
+  font-size:9px;
+  letter-spacing:0;
+  font-weight:400;
+  color:var(--muted2);
+}
+.day-tab.active[data-d="1"] { color:var(--c1); border-bottom-color:var(--c1); }
+.day-tab.active[data-d="2"] { color:var(--c2); border-bottom-color:var(--c2); }
+.day-tab.active[data-d="3"] { color:var(--c3); border-bottom-color:var(--c3); }
+.day-tab.active .mini-prog { color:var(--text); }
+
+/* ── CONTENT ── */
+.content { position:relative; z-index:1; padding:16px 14px 16px; }
+
+.day-panel { display:none; }
+.day-panel.active { display:block; animation:fadeUp 0.25s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* progress row */
+.prog-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:14px;
+}
+.prog-bar {
+  flex:1;
+  height:3px;
+  background:var(--border);
+  border-radius:2px;
+  overflow:hidden;
+}
+.prog-fill {
+  height:100%;
+  border-radius:2px;
+  width:0%;
+  transition:width 0.4s ease;
+}
+[data-p="1"] .prog-fill { background:var(--c1); }
+[data-p="2"] .prog-fill { background:var(--c2); }
+[data-p="3"] .prog-fill { background:var(--c3); }
+.prog-txt {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;
+  color:var(--muted);
+  white-space:nowrap;
+}
+
+/* mark done btn */
+.done-btn {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid var(--border2);
+  background:none;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all 0.2s;
+  margin-bottom:14px;
+}
+.done-btn:hover, .done-btn:active {
+  border-color:var(--green);
+  color:var(--green);
+  background:var(--green-bg);
+}
+.done-btn.completed {
+  border-color:var(--green);
+  color:var(--green);
+  background:var(--green-bg);
+}
+
+/* muscle group card */
+.group-card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:12px;
+  transition:border-color 0.2s;
+}
+[data-p="1"] .group-card.has-done { border-color:rgba(94,234,212,0.2); }
+[data-p="2"] .group-card.has-done { border-color:rgba(248,113,113,0.2); }
+[data-p="3"] .group-card.has-done { border-color:rgba(251,191,36,0.2); }
+
+.group-head {
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border-bottom:1px solid var(--border);
+}
+.g-bar { width:3px; height:18px; border-radius:2px; flex-shrink:0; }
+[data-p="1"] .g-bar { background:var(--c1); }
+[data-p="2"] .g-bar { background:var(--c2); }
+[data-p="3"] .g-bar { background:var(--c3); }
+.g-name {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  flex:1;
+}
+.g-check {
+  font-size:14px;
+  opacity:0;
+  transition:opacity 0.2s;
+}
+.group-card.all-done .g-check { opacity:1; color:var(--green); }
+
+/* exercise item */
+.ex-item {
+  padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+}
+.ex-item:last-child { border-bottom:none; }
+
+.ex-name {
+  font-size:15px;
+  font-weight:500;
+  color:var(--text);
+  margin-bottom:3px;
+  line-height:1.3;
+}
+.ex-note {
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.4;
+  margin-bottom:10px;
+}
+
+.ex-controls {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.set-lbl {
+  font-size:10px;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--muted2);
+  min-width:26px;
+}
+.set-bubbles { display:flex; gap:6px; }
+
+.set-bubble {
+  width:36px; height:36px;
+  border-radius:10px;
+  border:1px solid var(--border2);
+  background:none;
+  cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  color:var(--muted);
+  transition:all 0.15s;
+  display:flex; align-items:center; justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.set-bubble:active { transform:scale(0.92); }
+[data-p="1"] .set-bubble.done { background:rgba(94,234,212,0.15); border-color:var(--c1); color:var(--c1); }
+[data-p="2"] .set-bubble.done { background:rgba(248,113,113,0.15); border-color:var(--c2); color:var(--c2); }
+[data-p="3"] .set-bubble.done { background:rgba(251,191,36,0.15); border-color:var(--c3); color:var(--c3); }
+
+.rest-btn {
+  margin-left:auto;
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid var(--border2);
+  background:none;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all 0.15s;
+  touch-action:manipulation;
+  white-space:nowrap;
+}
+.rest-btn:active { transform:scale(0.94); }
+[data-p="1"] .rest-btn:active, [data-p="1"] .rest-btn:focus { border-color:var(--c1); color:var(--c1); }
+[data-p="2"] .rest-btn:active, [data-p="2"] .rest-btn:focus { border-color:var(--c2); color:var(--c2); }
+[data-p="3"] .rest-btn:active, [data-p="3"] .rest-btn:focus { border-color:var(--c3); color:var(--c3); }
+
+/* tip banner */
+.tip-card {
+  border-radius:14px;
+  padding:14px 16px;
+  border:1px solid;
+  display:flex;
+  gap:12px;
+  margin-bottom:12px;
+  font-size:13px;
+  color:#7070a0;
+  line-height:1.55;
+}
+.tip-card strong { color:var(--text); font-weight:500; }
+.tip-icon { font-size:18px; flex-shrink:0; }
+[data-p="1"] .tip-card { border-color:rgba(94,234,212,0.12); background:rgba(94,234,212,0.04); }
+[data-p="2"] .tip-card { border-color:rgba(248,113,113,0.12); background:rgba(248,113,113,0.04); }
+[data-p="3"] .tip-card { border-color:rgba(251,191,36,0.12); background:rgba(251,191,36,0.04); }
+
+/* notes */
+.notes-card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:12px;
+}
+.notes-head {
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--muted);
+  display:flex; align-items:center; gap:8px;
+}
+.notes-head::before { content:'◆'; font-size:8px; color:var(--c3); }
+.note-row {
+  display:flex; gap:10px; align-items:flex-start;
+  padding:10px 16px;
+  border-bottom:1px solid rgba(255,255,255,0.025);
+  font-size:13px;
+  color:#6868a0;
+  line-height:1.5;
+}
+.note-row:last-child { border-bottom:none; }
+.note-arr { color:var(--c3); font-size:10px; flex-shrink:0; margin-top:3px; font-weight:700; }
+
+/* ── BOTTOM NAV (reset) ── */
+.bottom-bar {
+  position:fixed;
+  bottom:0; left:0; right:0;
+  z-index:50;
+  background:rgba(8,8,16,0.95);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  padding:12px 16px calc(12px + var(--safe-bottom));
+  display:flex;
+  gap:10px;
+}
+
+.reset-btn {
+  flex:1;
+  padding:13px;
+  border-radius:14px;
+  border:1px solid var(--border2);
+  background:none;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all 0.2s;
+  touch-action:manipulation;
+}
+.reset-btn:active { transform:scale(0.97); }
+.reset-btn.danger:active, .reset-btn.danger:focus {
+  border-color:#f87171;
+  color:#f87171;
+  background:rgba(248,113,113,0.08);
+}
+
+.streak-chip {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-radius:14px;
+  padding:0 16px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  color:var(--muted);
+  white-space:nowrap;
+}
+.streak-fire { font-size:16px; }
+.streak-num { font-size:18px; color:var(--text); }
+
+/* ── TIMER MODAL ── */
+.timer-overlay {
+  display:none;
+  position:fixed; inset:0; z-index:200;
+  background:rgba(0,0,0,0.8);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  align-items:flex-end;
+  justify-content:center;
+}
+.timer-overlay.open { display:flex; animation:slideUp 0.25s ease; }
+@keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+
+.timer-sheet {
+  width:100%; max-width:480px;
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-radius:24px 24px 0 0;
+  padding:24px 24px calc(24px + var(--safe-bottom));
+}
+
+.timer-handle {
+  width:36px; height:4px;
+  background:var(--border2);
+  border-radius:2px;
+  margin:0 auto 20px;
+}
+
+.timer-ex { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; color:var(--text); margin-bottom:20px; text-align:center; }
+
+.timer-ring {
+  position:relative;
+  width:150px; height:150px;
+  margin:0 auto 20px;
+}
+.timer-svg { transform:rotate(-90deg); }
+.t-track { fill:none; stroke:var(--border2); stroke-width:7; }
+.t-arc { fill:none; stroke:var(--c1); stroke-width:7; stroke-linecap:round; stroke-dasharray:408; stroke-dashoffset:0; transition:stroke-dashoffset 1s linear, stroke 0.3s; }
+.timer-inner {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.t-num {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:52px; font-weight:700; line-height:1; color:var(--text);
+}
+.t-unit { font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
+
+.timer-presets {
+  display:flex; gap:8px; justify-content:center; margin-bottom:18px;
+}
+.t-preset {
+  flex:1;
+  padding:9px 4px;
+  border-radius:10px;
+  border:1px solid var(--border2);
+  background:none;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:14px; font-weight:700;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all 0.15s;
+  touch-action:manipulation;
+}
+.t-preset.sel { border-color:var(--c1); color:var(--c1); background:rgba(94,234,212,0.08); }
+
+.timer-btns { display:flex; gap:10px; }
+.t-btn {
+  flex:1; padding:14px;
+  border-radius:14px; border:none;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  cursor:pointer; transition:all 0.15s; touch-action:manipulation;
+}
+.t-btn:active { transform:scale(0.96); }
+.t-start { background:var(--c1); color:#000; }
+.t-reset { background:var(--border2); color:var(--muted); }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed;
+  bottom:100px; left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:var(--green);
+  color:#000;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:14px; font-weight:700; letter-spacing:0.1em;
+  padding:10px 22px;
+  border-radius:100px;
+  opacity:0;
+  pointer-events:none;
+  transition:all 0.3s;
+  z-index:300; white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ── CONFIRM DIALOG ── */
+.confirm-overlay {
+  display:none;
+  position:fixed; inset:0; z-index:250;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(8px);
+  align-items:center; justify-content:center;
+  padding:24px;
+}
+.confirm-overlay.open { display:flex; }
+.confirm-box {
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-radius:20px;
+  padding:28px 24px;
+  width:100%; max-width:320px;
+  text-align:center;
+}
+.confirm-title {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:22px; font-weight:700;
+  color:var(--text); margin-bottom:10px;
+}
+.confirm-msg {
+  font-size:14px; color:var(--muted);
+  line-height:1.5; margin-bottom:24px;
+}
+.confirm-btns { display:flex; gap:10px; }
+.confirm-btn {
+  flex:1; padding:13px;
+  border-radius:12px; border:none;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px; font-weight:700; letter-spacing:0.08em;
+  cursor:pointer; touch-action:manipulation;
+}
+.c-cancel { background:var(--border2); color:var(--muted); }
+.c-confirm { background:#f87171; color:#000; }
+</style>
+</head>
+<body>
+
+<!-- TIMER -->
+<div class="timer-overlay" id="timerOverlay">
+  <div class="timer-sheet">
+    <div class="timer-handle"></div>
+    <div class="timer-ex" id="timerEx">—</div>
+    <div class="timer-ring">
+      <svg class="timer-svg" width="150" height="150" viewBox="0 0 150 150">
+        <circle class="t-track" cx="75" cy="75" r="65"/>
+        <circle class="t-arc" id="tArc" cx="75" cy="75" r="65"/>
+      </svg>
+      <div class="timer-inner">
+        <div class="t-num" id="tNum">60</div>
+        <div class="t-unit">seconds</div>
+      </div>
+    </div>
+    <div class="timer-presets">
+      <button class="t-preset" onclick="setDur(45,this)">45s</button>
+      <button class="t-preset sel" onclick="setDur(60,this)">60s</button>
+      <button class="t-preset" onclick="setDur(90,this)">90s</button>
+      <button class="t-preset" onclick="setDur(120,this)">2m</button>
+    </div>
+    <div class="timer-btns">
+      <button class="t-btn t-reset" onclick="resetTimer()">Reset</button>
+      <button class="t-btn t-start" id="tStartBtn" onclick="toggleTimer()">Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM RESET -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-title">Reset Week?</div>
+    <div class="confirm-msg">This will clear all set completions and day marks. If you hit 3 sessions this week your streak will be saved.</div>
+    <div class="confirm-btns">
+      <button class="confirm-btn c-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="confirm-btn c-confirm" onclick="doReset()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="top-bar-row1">
+    <div class="app-name">LIAM</div>
+    <div class="week-info">
+      <span class="week-label">Week of</span>
+      <span class="week-date" id="weekDate">—</span>
+    </div>
+  </div>
+  <!-- 7-day dots -->
+  <div class="week-dots-row" id="weekDots"></div>
+</div>
+
+<!-- DAY TABS -->
+<div class="day-tabs">
+  <button class="day-tab active" data-d="1" onclick="switchDay(1)">
+    Chest+Back
+    <span class="mini-prog" id="mp1">0/4</span>
+  </button>
+  <button class="day-tab" data-d="2" onclick="switchDay(2)">
+    Legs
+    <span class="mini-prog" id="mp2">0/6</span>
+  </button>
+  <button class="day-tab" data-d="3" onclick="switchDay(3)">
+    Sharms
+    <span class="mini-prog" id="mp3">0/4</span>
+  </button>
+</div>
+
+<div class="content">
+
+<!-- ═══ DAY 1 ═══ -->
+<div class="day-panel active" data-p="1" id="p1">
+  <div class="prog-row">
+    <div class="prog-bar"><div class="prog-fill" id="pf1"></div></div>
+    <div class="prog-txt" id="pt1">0 of 4</div>
+  </div>
+  <button class="done-btn" id="db1" onclick="markDay(1)">Mark Day 1 Done</button>
+
+  <div class="group-card" id="gc-d1-chest">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Chest</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Pec Dec</div>
+      <div class="ex-note">Seat height: medium</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d1e0" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d1e0" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Pec Dec')">⏱ Rest</button>
+      </div>
+    </div>
+    <div class="ex-item">
+      <div class="ex-name">Chest Press</div>
+      <div class="ex-note">Seat height: low</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d1e1" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d1e1" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Chest Press')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-card" id="gc-d1-back">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Back</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Lat Pull Downs</div>
+      <div class="ex-note">Or pull ups</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d1e2" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d1e2" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Lat Pull Downs')">⏱ Rest</button>
+      </div>
+    </div>
+    <div class="ex-item">
+      <div class="ex-name">Bent Over Rows</div>
+      <div class="ex-note">Barbell — squeeze top of back</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d1e3" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d1e3" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Bent Over Rows')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-card">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Abs</div><div class="g-check"></div></div>
+    <div class="ex-item">
+      <div class="ex-name">Ab Work</div>
+      <div class="ex-note">Your choice 💀</div>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <span class="tip-icon">💡</span>
+    <div><strong>Form tip:</strong> On pec dec, squeeze your pecs at the peak — don't slam. On chest press, keep shoulder blades retracted throughout to protect your shoulders.</div>
+  </div>
+
+  <div class="notes-card">
+    <div class="notes-head">Notes</div>
+    <div class="note-row"><span class="note-arr">→</span>2 sets · 6–8 reps to failure</div>
+    <div class="note-row"><span class="note-arr">→</span>Start weaker side first on single-arm exercises</div>
+    <div class="note-row"><span class="note-arr">→</span>30g+ carbs at least 30min before</div>
+    <div class="note-row"><span class="note-arr">→</span>20g+ protein within 2hrs after</div>
+    <div class="note-row"><span class="note-arr">→</span>After all 3 days: rest day, then repeat</div>
+  </div>
+</div>
+
+<!-- ═══ DAY 2 ═══ -->
+<div class="day-panel" data-p="2" id="p2">
+  <div class="prog-row">
+    <div class="prog-bar"><div class="prog-fill" id="pf2"></div></div>
+    <div class="prog-txt" id="pt2">0 of 6</div>
+  </div>
+  <button class="done-btn" id="db2" onclick="markDay(2)">Mark Day 2 Done</button>
+
+  <div class="group-card" id="gc-d2-quads">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Quads</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Leg Extension</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d2e0" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d2e0" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Leg Extension')">⏱ Rest</button>
+      </div>
+    </div>
+    <div class="ex-item">
+      <div class="ex-name">Bulgarian Split Squats</div>
+      <div class="ex-note">Dumbbells in each hand</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d2e1" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d2e1" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Split Squats')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-card" id="gc-d2-hams">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Hamstrings</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Romanian Deadlift</div>
+      <div class="ex-note">Barbell or dumbbell — whichever has most weight</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d2e2" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d2e2" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Romanian Deadlift')">⏱ Rest</button>
+      </div>
+    </div>
+    <div class="ex-item">
+      <div class="ex-name">Cable Hamstring Curl</div>
+      <div class="ex-note">Lie down on the ground for it</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d2e3" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d2e3" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Ham Curl')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-card">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Abductor</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Abductor Leg Sweeps</div>
+      <div class="ex-note">Cable at ankles</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d2e4" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d2e4" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Abductor')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-card">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Adductor</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Adductor Leg Sweeps</div>
+      <div class="ex-note">Cable at ankles — face away from machine ⚠️</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d2e5" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d2e5" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Adductor')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-card">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Calves</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Weighted Calf Raises</div>
+      <div class="ex-note">Off an elevated edge · 10–15 reps to failure</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d2e6" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d2e6" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Calf Raises')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <span class="tip-icon">💡</span>
+    <div><strong>Form tip:</strong> On Bulgarian split squats, keep your front foot far enough forward that your shin stays vertical. On RDLs, push hips back — feel the stretch in hamstrings, not lower back.</div>
+  </div>
+
+  <div class="notes-card">
+    <div class="notes-head">Notes</div>
+    <div class="note-row"><span class="note-arr">→</span>2 sets · 6–8 reps to failure (calves: 10–15)</div>
+    <div class="note-row"><span class="note-arr">→</span>Start weaker side first on single-leg exercises</div>
+    <div class="note-row"><span class="note-arr">→</span>30g+ carbs at least 30min before</div>
+    <div class="note-row"><span class="note-arr">→</span>20g+ protein within 2hrs after</div>
+  </div>
+</div>
+
+<!-- ═══ DAY 3 ═══ -->
+<div class="day-panel" data-p="3" id="p3">
+  <div class="prog-row">
+    <div class="prog-bar"><div class="prog-fill" id="pf3"></div></div>
+    <div class="prog-txt" id="pt3">0 of 4</div>
+  </div>
+  <button class="done-btn" id="db3" onclick="markDay(3)">Mark Day 3 Done</button>
+
+  <div class="group-card">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Shoulders</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Cable Lateral Raises</div>
+      <div class="ex-note">Lowest cable, single-hand attachment</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d3e0" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d3e0" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Lateral Raises')">⏱ Rest</button>
+      </div>
+    </div>
+    <div class="ex-item">
+      <div class="ex-name">Cable Rear Delt Flys</div>
+      <div class="ex-note">Medium cable, grab cable directly · 10–15 reps</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d3e1" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d3e1" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Rear Delt Flys')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-card">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Triceps</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Tricep Pushdown</div>
+      <div class="ex-note">Highest cable, bar attachment</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d3e2" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d3e2" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Tricep Pushdown')">⏱ Rest</button>
+      </div>
+    </div>
+    <div class="ex-item">
+      <div class="ex-name">Single Arm Tricep Extension</div>
+      <div class="ex-note">Highest cable, grab cable directly</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d3e3" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d3e3" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Tricep Extension')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-card">
+    <div class="group-head"><div class="g-bar"></div><div class="g-name">Biceps</div><div class="g-check">✓</div></div>
+    <div class="ex-item">
+      <div class="ex-name">Cable Bicep Curl</div>
+      <div class="ex-note">Lowest cable, bar attachment</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d3e4" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d3e4" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Bicep Curl')">⏱ Rest</button>
+      </div>
+    </div>
+    <div class="ex-item">
+      <div class="ex-name">Bayesian Curls</div>
+      <div class="ex-note">Lowest cable, single-hand — face away from machine</div>
+      <div class="ex-controls">
+        <span class="set-lbl">Sets</span>
+        <div class="set-bubbles">
+          <button class="set-bubble" data-ex="d3e5" data-si="0" onclick="tap(this)">1</button>
+          <button class="set-bubble" data-ex="d3e5" data-si="1" onclick="tap(this)">2</button>
+        </div>
+        <button class="rest-btn" onclick="openTimer('Bayesian Curls')">⏱ Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <span class="tip-icon">💡</span>
+    <div><strong>Form tip:</strong> Bayesian curls give peak tension in the stretch — lean slightly forward, elbow high behind you. For triceps, keep elbows pinned to your sides, no flaring.</div>
+  </div>
+
+  <div class="notes-card">
+    <div class="notes-head">Notes</div>
+    <div class="note-row"><span class="note-arr">→</span>2 sets · 6–8 reps to failure (rear delt: 10–15)</div>
+    <div class="note-row"><span class="note-arr">→</span>Start weaker side first on single-arm exercises</div>
+    <div class="note-row"><span class="note-arr">→</span>30g+ carbs at least 30min before</div>
+    <div class="note-row"><span class="note-arr">→</span>20g+ protein within 2hrs after</div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="streak-chip">
+    <span class="streak-fire">🔥</span>
+    <span class="streak-num" id="streakNum">0</span>
+    <span style="font-size:11px;color:var(--muted)">WKS</span>
+  </div>
+  <button class="reset-btn danger" onclick="confirmReset()">Reset Week</button>
+</div>
+
+<script>
+// ───────────────────────────────────────
+// STORAGE KEYS
+const SK = {
+  sets: 'liam_sets',        // {exId: [bool,bool]}
+  days: 'liam_days',        // {1:bool, 2:bool, 3:bool}
+  weekOf: 'liam_weekof',    // ISO date of week start (Monday)
+  streak: 'liam_streak',    // number
+  dotMap: 'liam_dotmap',    // {dayIndex: dayType} where dayType= 1|2|3|'R'
+};
+
+// TOTALS PER DAY (exercises with sets)
+const TOTALS = {1:4, 2:7, 3:6};
+
+// STATE
+let state = {
+  sets: {},   // { exId: Set of done-set-indices }
+  days: {},   // { 1:bool, 2:bool, 3:bool }
+  dotMap: {}, // { 0..6: 1|2|3|'R'|null }
+  streak: 0,
+  weekOf: null,
+};
+
+// ── PERSISTENCE ──
+function save() {
+  const setsSerial = {};
+  for (const [k,v] of Object.entries(state.sets)) setsSerial[k] = [...v];
+  localStorage.setItem(SK.sets, JSON.stringify(setsSerial));
+  localStorage.setItem(SK.days, JSON.stringify(state.days));
+  localStorage.setItem(SK.dotMap, JSON.stringify(state.dotMap));
+  localStorage.setItem(SK.streak, String(state.streak));
+  localStorage.setItem(SK.weekOf, state.weekOf || '');
+}
+
+function load() {
+  try {
+    const sRaw = JSON.parse(localStorage.getItem(SK.sets) || '{}');
+    state.sets = {};
+    for (const [k,v] of Object.entries(sRaw)) state.sets[k] = new Set(v);
+    state.days = JSON.parse(localStorage.getItem(SK.days) || '{}');
+    state.dotMap = JSON.parse(localStorage.getItem(SK.dotMap) || '{}');
+    state.streak = parseInt(localStorage.getItem(SK.streak) || '0');
+    state.weekOf = localStorage.getItem(SK.weekOf) || null;
+  } catch(e) {
+    state = { sets:{}, days:{}, dotMap:{}, streak:0, weekOf:null };
+  }
+}
+
+// ── WEEK UTILITIES ──
+function getMondayOf(date) {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=Sun
+  const diff = (day === 0) ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function isoDate(d) {
+  return d.toISOString().slice(0,10);
+}
+
+function checkAutoReset() {
+  // No auto-reset — manual only.
+  // Just initialise weekOf + default training days if first ever load.
+  if (!state.weekOf) {
+    state.weekOf = isoDate(getMondayOf(new Date()));
+    // Wed=2, Fri=4, Sun=6 (Mon=0 index)
+    // Pre-label the default training days so they show on the dot row
+    // but don't mark them as done — user does that as they train.
+    save();
+  }
+}
+
+// ── WEEK DOTS ──
+const DAY_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function buildWeekDots() {
+  const container = document.getElementById('weekDots');
+  container.innerHTML = '';
+  const today = new Date();
+  const monday = getMondayOf(today);
+  const todayIdx = (today.getDay() + 6) % 7; // Mon=0..Sun=6
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dot = document.createElement('div');
+    dot.className = 'week-dot';
+    dot.dataset.idx = i;
+
+    const dayEl = document.createElement('div');
+    dayEl.className = 'wd-day';
+    dayEl.textContent = DAY_LABELS[i];
+
+    const circle = document.createElement('div');
+    circle.className = 'wd-circle';
+    if (i === todayIdx) circle.classList.add('today');
+
+    const TRAIN_DAYS = [2,4,6]; // Wed, Fri, Sun
+    const type = state.dotMap[i];
+    if (type === 1) { circle.classList.add('trained-1','done-check'); }
+    else if (type === 2) { circle.classList.add('trained-2','done-check'); }
+    else if (type === 3) { circle.classList.add('trained-3','done-check'); }
+    else if (type === 'R') { circle.classList.add('rest-day'); circle.textContent = 'R'; }
+    else if (TRAIN_DAYS.includes(i)) { circle.textContent = '·'; circle.style.cssText += ';border-style:dashed'; }
+    else { circle.textContent = DAY_LABELS[i][0]; }
+
+    const lbl = document.createElement('div');
+    lbl.className = 'wd-label';
+    lbl.textContent = type ? (type === 'R' ? 'Rest' : `Day ${type}`) : '';
+
+    dot.appendChild(dayEl);
+    dot.appendChild(circle);
+    dot.appendChild(lbl);
+    dot.addEventListener('click', () => cycleDotType(i));
+    container.appendChild(dot);
+  }
+
+  // Week date header
+  const opts = { month:'short', day:'numeric' };
+  const endDate = new Date(monday); endDate.setDate(monday.getDate()+6);
+  document.getElementById('weekDate').textContent =
+    monday.toLocaleDateString('en-AU',opts) + ' – ' + endDate.toLocaleDateString('en-AU',opts);
+}
+
+function cycleDotType(idx) {
+  const cur = state.dotMap[idx];
+  const cycle = [null, 1, 2, 3, 'R'];
+  const ci = cycle.indexOf(cur);
+  state.dotMap[idx] = cycle[(ci + 1) % cycle.length];
+  save();
+  buildWeekDots();
+}
+
+// ── SET TRACKING ──
+function tap(btn) {
+  const ex = btn.dataset.ex;
+  const si = parseInt(btn.dataset.si);
+  if (!state.sets[ex]) state.sets[ex] = new Set();
+  if (state.sets[ex].has(si)) {
+    state.sets[ex].delete(si);
+    btn.classList.remove('done');
+  } else {
+    state.sets[ex].add(si);
+    btn.classList.add('done');
+  }
+  save();
+  updateProgress();
+}
+
+function exDone(exid) {
+  return state.sets[exid] && state.sets[exid].size >= 2;
+}
+
+function countDone(day) {
+  // count exercises with 2 sets done
+  const prefix = `d${day}e`;
+  const totals = {1:4, 2:7, 3:6};
+  let done = 0;
+  for (let i = 0; i < totals[day]; i++) {
+    if (exDone(`${prefix}${i}`)) done++;
+  }
+  return done;
+}
+
+function updateProgress() {
+  [1,2,3].forEach(d => {
+    const done = countDone(d);
+    const total = TOTALS[d];
+    const pct = total > 0 ? Math.round((done/total)*100) : 0;
+    document.getElementById(`pf${d}`).style.width = pct+'%';
+    document.getElementById(`pt${d}`).textContent = `${done} of ${total}`;
+    document.getElementById(`mp${d}`).textContent = `${done}/${total}`;
+  });
+}
+
+// ── MARK DAY ──
+function markDay(day) {
+  const btn = document.getElementById(`db${day}`);
+  if (state.days[day]) {
+    // Unmark
+    state.days[day] = false;
+    btn.classList.remove('completed');
+    btn.textContent = `Mark Day ${day} Done`;
+  } else {
+    // Mark all sets
+    const prefix = `d${day}e`;
+    const total = TOTALS[day];
+    for (let i = 0; i < total; i++) {
+      const exid = `${prefix}${i}`;
+      if (!state.sets[exid]) state.sets[exid] = new Set();
+      state.sets[exid].add(0);
+      state.sets[exid].add(1);
+    }
+    restoreSetUI(day);
+    updateProgress();
+    state.days[day] = true;
+    btn.classList.add('completed');
+    btn.textContent = `✓ Day ${day} Complete`;
+    showToast(`Day ${day} smashed! 💪`);
+  }
+  save();
+}
+
+function restoreDayBtn(day) {
+  const btn = document.getElementById(`db${day}`);
+  if (state.days[day]) {
+    btn.classList.add('completed');
+    btn.textContent = `✓ Day ${day} Complete`;
+  }
+}
+
+// ── RESTORE UI FROM STATE ──
+function restoreUI() {
+  // Restore set bubbles
+  document.querySelectorAll('.set-bubble').forEach(btn => {
+    const ex = btn.dataset.ex;
+    const si = parseInt(btn.dataset.si);
+    if (state.sets[ex] && state.sets[ex].has(si)) {
+      btn.classList.add('done');
+    }
+  });
+  [1,2,3].forEach(d => restoreDayBtn(d));
+  updateProgress();
+}
+
+function restoreSetUI(day) {
+  document.querySelectorAll(`#p${day} .set-bubble`).forEach(btn => {
+    const ex = btn.dataset.ex;
+    const si = parseInt(btn.dataset.si);
+    if (state.sets[ex] && state.sets[ex].has(si)) btn.classList.add('done');
+  });
+}
+
+// ── TABS ──
+function switchDay(d) {
+  document.querySelectorAll('.day-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.day-tab[data-d="${d}"]`).classList.add('active');
+  document.getElementById(`p${d}`).classList.add('active');
+}
+
+// ── RESET ──
+function confirmReset() {
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+}
+function doReset() {
+  closeConfirm();
+  // Count streak: if 3+ days done this week, increment
+  const done = Object.values(state.days).filter(Boolean).length;
+  if (done >= 3) {
+    state.streak++;
+    setTimeout(() => showToast(`🔥 ${state.streak} week streak!`), 400);
+  } else if (done === 0 && state.weekOf) {
+    state.streak = 0;
+  }
+  state.sets = {};
+  state.days = {};
+  state.dotMap = {};
+  state.weekOf = isoDate(getMondayOf(new Date()));
+  save();
+  // Reset all UI
+  document.querySelectorAll('.set-bubble').forEach(b => b.classList.remove('done'));
+  document.querySelectorAll('.done-btn').forEach(b => {
+    b.classList.remove('completed');
+    const d = b.id.replace('db','');
+    b.textContent = `Mark Day ${d} Done`;
+  });
+  updateProgress();
+  buildWeekDots();
+  showToast('Week reset. Let\'s go again 🔄');
+}
+
+// ── STREAK ──
+function updateStreakUI() {
+  document.getElementById('streakNum').textContent = state.streak;
+}
+
+// ── TIMER ──
+const CIRCUM = 2 * Math.PI * 65;
+let tTotal = 60, tRemain = 60, tRunning = false, tInterval = null;
+
+function openTimer(name) {
+  document.getElementById('timerEx').textContent = name;
+  document.getElementById('timerOverlay').classList.add('open');
+  stopTimer();
+  tRemain = tTotal;
+  renderTimer();
+}
+function closeTimerSheet() {
+  document.getElementById('timerOverlay').classList.remove('open');
+  stopTimer();
+}
+function setDur(s, btn) {
+  tTotal = s; tRemain = s;
+  stopTimer();
+  document.getElementById('tStartBtn').textContent = 'Start';
+  renderTimer();
+  document.querySelectorAll('.t-preset').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function toggleTimer() {
+  tRunning ? stopTimer() : startTimer();
+}
+function startTimer() {
+  if (tRemain <= 0) { tRemain = tTotal; }
+  tRunning = true;
+  document.getElementById('tStartBtn').textContent = 'Pause';
+  tInterval = setInterval(() => {
+    tRemain--;
+    renderTimer();
+    if (tRemain <= 0) {
+      stopTimer();
+      document.getElementById('tStartBtn').textContent = 'Done!';
+      showToast('Rest done — back to it! 🔥');
+    }
+  }, 1000);
+}
+function stopTimer() {
+  tRunning = false;
+  clearInterval(tInterval);
+  if (document.getElementById('tStartBtn').textContent === 'Pause')
+    document.getElementById('tStartBtn').textContent = 'Start';
+}
+function resetTimer() {
+  stopTimer();
+  tRemain = tTotal;
+  document.getElementById('tStartBtn').textContent = 'Start';
+  renderTimer();
+}
+function renderTimer() {
+  document.getElementById('tNum').textContent = tRemain;
+  const pct = tRemain / tTotal;
+  document.getElementById('tArc').style.strokeDashoffset = CIRCUM * (1 - pct);
+  const arc = document.getElementById('tArc');
+  arc.style.stroke = pct < 0.25 ? '#f87171' : pct < 0.5 ? '#fbbf24' : '#5eead4';
+}
+document.getElementById('timerOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('timerOverlay')) closeTimerSheet();
+});
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── BOOT ──
+load();
+checkAutoReset();
+restoreUI();
+buildWeekDots();
+updateStreakUI();
+renderTimer();
+</script>
+</body>
+</html>
